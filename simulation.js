@@ -286,13 +286,11 @@ function loadLimpMode() {
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <!-- Vehicle State Panel -->
             <div class="card bg-gray-50 p-4">
                 <h3 class="text-xl font-bold mb-3 text-gray-700 border-b pb-2">Vehicle State</h3>
                 <div id="state-display" class="space-y-1 text-lg"></div>
             </div>
 
-            <!-- Simulation Controls -->
             <div class="card bg-gray-100 p-4 flex flex-col justify-around">
                 <h3 class="text-xl font-bold mb-3 text-gray-700 border-b pb-2">Simulation Controls</h3>
                 <button onclick="stopLimpModeAttack()" class="w-full px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-150 transform hover:scale-[1.02]">
@@ -308,37 +306,65 @@ function loadLimpMode() {
             </div>
         </div>
         
-        <!-- QUESTIONS -->
         <form onsubmit="event.preventDefault(); submitAnswers('limp-mode');" class="card bg-white p-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Analysis Questions</h2>
             <div class="space-y-6">
-                <!-- Question 1 (CAN ID) -->
+                
                 <div>
-                    <p class="font-semibold text-lg mb-2">Q1: Based on the log, which CAN ID is being spoofed to trigger Limp Mode?</p>
+                    <p class="font-semibold text-lg mb-2">Q1: Which CAN ID is the primary target of the spoofing attack?</p>
                     <ul class="space-y-1 ml-4">
-                        <li><input type="radio" name="q1" value="A" id="q1a"> <label for="q1a">A) Motor Power Output (CAN ID 0x205)</label></li>
-                        <li><input type="radio" name="q1" value="B" id="q1b"> <label for="q1b">B) Battery State of Charge (CAN ID 0x101)</label></li>
-                        <li><input type="radio" name="q1" value="C" id="q1c"> <label for="q1c">C) Vehicle Speed (CAN ID 0x300)</label></li>
-                        <li><input type="radio" name="q1" value="D" id="q1d"> <label for="q1d">D) Brake Pedal Position (CAN ID 0x150)</label></li>
+                        <li><input type="radio" name="q1" value="A" id="q1a"> <label for="q1a">A) 0x205 (Motor Power Command)</label></li>
+                        <li><input type="radio" name="q1" value="B" id="q1b"> <label for="q1b">B) 0x101 (Battery State of Charge)</label></li>
+                        <li><input type="radio" name="q1" value="C" id="q1c"> <label for="q1c">C) 0x1A0 (Vehicle Speed)</label></li>
+                        <li><input type="radio" name="q1" value="D" id="q1d"> <label for="q1d">D) 0x00A (Timestamp)</label></li>
                     </ul>
                 </div>
 
-                <!-- Question 2 (Payload Value) -->
                 <div>
-                    <p class="font-semibold text-lg mb-2">Q2: When the attack is active, what hexadecimal data payload value does the spoofed message (ID 0x101) carry?</p>
+                    <p class="font-semibold text-lg mb-2">Q2: What is the *malicious data payload* (in Hex) of the spoofed message, and what does it represent?</p>
                     <ul class="space-y-1 ml-4">
-                        <li><input type="radio" name="q2" value="A" id="q2a"> <label for="q2a">A) 0xAA (170 Decimal)</label></li>
-                        <li><input type="radio" name="q2" value="B" id="q2b"> <label for="q2b">B) 0x0F (15 Decimal)</label></li>
-                        <li><input type="radio" name="q2" value="C" id="q2c"> <label for="q2c">C) 0x50 (80 Decimal)</label></li>
-                        <li><input type="radio" name="q2" value="D" id="q2d"> <label for="q2d">D) 0x1E (30 Decimal)</label></li>
+                        <li><input type="radio" name="q2" value="A" id="q2a"> <label for="q2a">A) 0x58 (88%)</label></li>
+                        <li><input type="radio" name="q2" value="B" id="q2b"> <label for="q2b">B) 0x0F (15%)</label></li>
+                        <li><input type="radio" name="q2" value="C" id="q2c"> <label for="q2c">C) 0x14 (20%)</label></li>
+                        <li><input type="radio" name="q2" value="D" id="q2d"> <label for="q2d">D) 0x1E (30%)</label></li>
                     </ul>
                 </div>
+
+                <div>
+                    <p class="font-semibold text-lg mb-2">Q3: This attack, where an attacker sends messages with a forged CAN ID to impersonate a legitimate ECU, is a form of:</p>
+                    <ul class="space-y-1 ml-4">
+                        <li><input type="radio" name="q3" value="A" id="q3a"> <label for="q3a">A) Replay Attack</label></li>
+                        <li><input type="radio" name="q3" value="B" id="q3b"> <label for="q3b">B) Denial of Service (DoS)</label></li>
+                        <li><input type="radio" name="q3" value="C" id="q3c"> <label for="q3c">C) Masquerade (Spoofing) Attack</label></li>
+                        <li><input type="radio" name="q3" value="D" id="q3d"> <label for="q3d">D) Man-in-the-Middle (MITM) Attack</label></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <p class="font-semibold text-lg mb-2">Q4: What fundamental vulnerability of the classic CAN bus protocol is exploited here?</p>
+                    <ul class="space-y-1 ml-4">
+                        <li><input type="radio" name="q4" value="A" id="q4a"> <label for="q4a">A) Payloads are not encrypted.</label></li>
+                        <li><input type="radio" name="q4" value="B" id="q4b"> <label for="q4b">B) No source authentication or message integrity checks.</label></li>
+                        <li><input type="radio" name="q4" value="C" id="q4c"> <label for="q4c">C) The bus speed is too slow to detect anomalies.</label></li>
+                        <li><input type="radio" name="q4" value="D" id="q4d"> <label for="q4d">D) All ECUs are on the same physical wire.</label></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <p class="font-semibold text-lg mb-2">Q5: The attacker's *goal* is to trigger Limp Mode. What is the *method* used to achieve this?</p>
+                    <ul class="space-y-1 ml-4">
+                        <li><input type="radio" name="q5" value="A" id="q5a"> <label for="q5a">A) Injecting false battery data to trick the Motor Control Unit (MCU).</label></li>
+                        <li><input type="radio" name="q5" value="B" id="q5b"> <label for="q5b">B) Directly sending a 'Limp Mode' command via CAN ID 0x205.</label></li>
+                        <li><input type="radio" name="q5" value="C" id="q5c"> <label for="q5c">C) Flooding the CAN bus so the MCU cannot receive real data.</label></li>
+                        <li><input type="radio" name="q5" value="D" id="q5d"> <label for="q5d">D) Draining the actual battery (0x101) to 15%.</label></li>
+                    </ul>
+                </div>
+
             </div>
             
-            <!-- Response Question -->
             <div class="mt-6">
-                <p class="font-semibold text-lg mb-2">Q3: Propose a high-level mitigation strategy to prevent this type of CAN injection attack on a future vehicle design. (Free Response)</p>
-                <textarea id="limp-proposal" class="w-full border-2 border-gray-300 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500" rows="3" placeholder="Explain your proposal (e.g., encryption, authentication, network segmentation)."></textarea>
+                <p class="font-semibold text-lg mb-2">Q6: Propose a high-level mitigation strategy to prevent this type of CAN injection attack on a future vehicle design. (Free Response)</p>
+                <textarea id="limp-proposal" class="w-full border-2 border-gray-300 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500" rows="3" placeholder="Explain your proposal (e.g., authentication, network segmentation, IDS)."></textarea>
             </div>
             
             <button type="submit" class="mt-6 w-full md:w-auto px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition duration-150">
@@ -356,9 +382,9 @@ function loadScenario1() {
         <div class="card bg-white p-6 mb-8">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Scenario Briefing: Scenario 1 - FDI Attack (CACC)</h2>
             <p class="text-gray-700 mb-4">
-                Autonomous vehicles in a Cooperative Adaptive Cruise Control (CACC) platoon are communicating the leader's velocity to the followers. An attacker has compromised the wireless communication channel and is injecting **False Data** into the velocity signal sent from the leader to the follower.
+                Autonomous vehicles in a Cooperative Adaptive Cruise Control (CACC) platoon are communicating via **V2V (Vehicle-to-Vehicle)**. An attacker has compromised this channel and is injecting **False Data** into the velocity signal sent from the leader to the follower.
             </p>
-            <p class="font-semibold text-gray-700">Goal: Analyze the log data (Follower Velocity & Distance) to determine the attack's impact on string stability and safety.</p>
+            <p class="font-semibold text-gray-700">Goal: Analyze the log data to determine the attack's impact on safety and system integrity.</p>
         </div>
 
         <div class="card bg-white p-6 mb-8">
@@ -369,70 +395,63 @@ function loadScenario1() {
             </div>
         </div>
         
-        <!-- QUESTIONS -->
         <form onsubmit="event.preventDefault(); submitAnswers('scenario1');" class="card bg-white p-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Analysis Questions</h2>
             <div class="space-y-6">
-                <!-- Q1: Time of Max Danger -->
                 <div>
-                    <p class="font-semibold text-lg mb-2">Q1: At approximately what time (T_S) does the inter-vehicle distance drop to its minimum dangerous level during the attack?</p>
+                    <p class="font-semibold text-lg mb-2">Q1: The False Data Injection (FDI) attack causes a minimum-distance safety hazard. At what time (T_S) does this *primary impact* occur?</p>
                     <ul class="space-y-1 ml-4">
                         <li><input type="radio" name="q1" value="A" id="s1q1a"> <label for="s1q1a">A) 10 seconds</label></li>
                         <li><input type="radio" name="q1" value="B" id="s1q1b"> <label for="s1q1b">B) 44 seconds</label></li>
                         <li><input type="radio" name="q1" value="C" id="s1q1c"> <label for="s1q1c">C) 80 seconds</label></li>
-                        <li><input type="radio" name="q1" value="D" id="s1q1d"> <label for="s1q1d">D) 120 seconds</label></li>
+                        <li><input type="radio" name="q1" value="D" id="s1q1d"> <label for="s1q1d">D) 50 seconds</label></li>
                     </ul>
                 </div>
 
-                <!-- Q2: Immediate effect on Velocity -->
                 <div>
-                    <p class="font-semibold text-lg mb-2">Q2: What is the most immediate effect of the FDI attack on the Follower's Velocity at T_S = 41?</p>
+                    <p class="font-semibold text-lg mb-2">Q2: Based on the follower's reaction (rapid acceleration at T_S=41), what is the *nature* of the injected false data?</p>
                     <ul class="space-y-1 ml-4">
-                        <li><input type="radio" name="q2" value="A" id="s1q2a"> <label for="s1q2a">A) A sudden, large decrease in velocity.</label></li>
-                        <li><input type="radio" name="q2" value="B" id="s1q2b"> <label for="s1q2b">B) A sudden, large increase in velocity.</label></li>
-                        <li><input type="radio" name="q2" value="C" id="s1q2c"> <label for="s1q2c">C) Velocity remains constant at 3.98 mps.</label></li>
-                        <li><input type="radio" name="q2" value="D" id="s1q2d"> <label for="s1q2d">D) It immediately enters Limp Mode.</label></li>
+                        <li><input type="radio" name="q2" value="A" id="s1q2a"> <label for="s1q2a">A) The attacker is reporting a *slower* leader velocity, causing the follower to brake.</label></li>
+                        <li><input type="radio" name="q2" value="B" id="s1q2b"> <label for="s1q2b">B) The attacker is reporting a *higher* leader velocity, causing the follower to accelerate.</label></li>
+                        <li><input type="radio" name="q2" value="C" id="s1q2c"> <label for="s1q2c">C) The attacker is flooding the network, causing a DoS.</label></li>
+                        <li><input type="radio" name="q2" value="D" id="s1q2d"> <label for="s1q2d">D) The attacker is reporting a *negative* distance.</label></li>
                     </ul>
                 </div>
 
-                <!-- Q3: String Stability Assessment -->
                 <div>
-                    <p class="font-semibold text-lg mb-2">Q3: How does the FDI attack specifically impact the platoon's "string stability"?</p>
+                    <p class="font-semibold text-lg mb-2">Q3: By manipulating the *content* of the V2V messages, the attacker is violating which core cybersecurity principle of the CIA Triad?</p>
                     <ul class="space-y-1 ml-4">
-                        <li><input type="radio" name="q3" value="A" id="s1q3a"> <label for="s1q3a">A) It is greatly improved, as vehicle spacing increases.</label></li>
-                        <li><input type="radio" name="q3" value="B" id="s1q3b"> <label for="s1q3b">B) It is unaffected, as the velocity errors dampen out quickly.</label></li>
-                        <li><input type="radio" name="q3" value="C" id="s1q3c"> <label for="s1q3c">C) It degrades significantly, as distance errors amplify rapidly.</label></li>
-                        <li><input type="radio" name="q3" value="D" id="s1q3d"> <label for="s1q3d">D) It causes the vehicles to stop completely.</label></li>
+                        <li><input type="radio" name="q3" value="A" id="s1q3a"> <label for="s1q3a">A) Confidentiality</label></li>
+                        <li><input type="radio" name="q3" value="B" id="s1q3b"> <label for="s1q3b">B) Integrity</label></li>
+                        <li><input type="radio" name="q3" value="C" id="s1q3c"> <label for="s1q3c">C) Availability</label></li>
+                        <li><input type="radio" name="q3" value="D" id="s1q3d"> <label for="s1q3d">D) Non-Repudiation</label></li>
                     </ul>
                 </div>
                 
-                <!-- Q4: Benign Distance State -->
                 <div>
-                    <p class="font-semibold text-lg mb-2">Q4: What is the target inter-vehicle distance (Distance_between_vehicles_before_attack) the CACC system is aiming for?</p>
+                    <p class="font-semibold text-lg mb-2">Q4: This FDI attack targets data from the leader. This data is part of what type of communication network?</p>
                     <ul class="space-y-1 ml-4">
-                        <li><input type="radio" name="q4" value="A" id="s1q4a"> <label for="s1q4a">A) Approximately 1.815 meters</label></li>
-                        <li><input type="radio" name="q4" value="B" id="s1q4b"> <label for="s1q4b">B) Approximately 3.985 meters</label></li>
-                        <li><input type="radio" name="q4" value="C" id="s1q4c"> <label for="s1q4c">C) Approximately 5.000 meters</label></li>
-                        <li><input type="radio" name="q4" value="D" id="s1q4d"> <label for="s1q4d">D) Approximately 5.713 meters</label></li>
+                        <li><input type="radio" name="q4" value="A" id="s1q4a"> <label for="s1q4a">A) Vehicle-to-Vehicle (V2V)</label></li>
+                        <li><input type="radio" name="q4" value="B" id="s1q4b"> <label for="s1q4b">B) Vehicle-to-Infrastructure (V2I)</label></li>
+                        <li><input type="radio" name="q4" value="C" id="s1q4c"> <label for="s1q4c">C) Internal CAN bus</label></li>
+                        <li><input type="radio" name="q4" value="D" id="s1q4d"> <label for="s1q4d">D) GPS Satellite</label></li>
                     </ul>
                 </div>
 
-                <!-- Q5: Recovery Time -->
                 <div>
-                    <p class="font-semibold text-lg mb-2">Q5: After the attack (highlighted section) ends, how does the Follower's Distance (Distance_between_vehicles_after_attack) behave?</p>
+                    <p class="font-semibold text-lg mb-2">Q5: After the attack stops (post T_S=50), the system stabilizes at an unsafe distance (~1.8m). This demonstrates a lack of:</p>
                     <ul class="space-y-1 ml-4">
-                        <li><input type="radio" name="q5" value="A" id="s1q5a"> <label for="s1q5a">A) It immediately returns to 5.000m and remains stable.</label></li>
-                        <li><input type="radio" name="q5" value="B" id="s1q5b"> <label for="s1q5b">B) It oscillates severely before stabilizing around 1.815m.</label></li>
-                        <li><input type="radio" name="q5" value="C" id="s1q5c"> <label for="s1q5c">C) It enters a perpetual negative distance (collision).</label></li>
-                        <li><input type="radio" name="q5" value="D" id="s1q5d"> <label for="s1q5d">D) It remains at the dangerous minimum distance.</label></li>
+                        <li><input type="radio" name="q5" value="A" id="s1q5a"> <label for="s1q5a">A) Network encryption.</label></li>
+                        <li><input type="radio" name="q5" value="B" id="s1q5b"> <label for="s1q5b">B) High-speed processors.</label></li>
+                        <li><input type="radio" name="q5" value="C" id="s1q5c"> <label for="s1q5c">C) System resilience / fail-safe recovery logic.</label></li>
+                        <li><input type="radio" name="q5" value="D" id="s1q5d"> <label for="s1q5d">D) A real-time operating system.</label></li>
                     </ul>
                 </div>
             </div>
             
-            <!-- Response Question -->
             <div class="mt-6">
-                <p class="font-semibold text-lg mb-2">Q6: Explain why the False Data Injection attack on the **velocity** measurement leads to a near-collision (minimum distance) rather than just erratic acceleration. (Free Response)</p>
-                <textarea id="s1-proposal" class="w-full border-2 border-gray-300 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500" rows="3" placeholder="Explain how the incorrect velocity data affects the control loop."></textarea>
+                <p class="font-semibold text-lg mb-2">Q6: How could a **plausibility check** (a type of Intrusion Detection) have potentially *detected* this attack? (Free Response)</p>
+                <textarea id="s1-proposal" class="w-full border-2 border-gray-300 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500" rows="3" placeholder="Explain how the follower could cross-reference the V2V data with its own sensors."></textarea>
             </div>
             
             <button type="submit" class="mt-6 w-full md:w-auto px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition duration-150">
@@ -450,7 +469,7 @@ function loadScenario2() {
         <div class="card bg-white p-6 mb-8">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Scenario Briefing: Scenario 2 - Time-Varying Delay</h2>
             <p class="text-gray-700 mb-4">
-                Autonomous vehicles in a Cooperative Adaptive Cruise Control (CACC) platoon are experiencing degradation in the wireless communication channel, resulting in a **Time-Varying Delay** in data transfer. The follower vehicle receives outdated information from the leader.
+                A CACC platoon is experiencing degradation in the wireless communication channel. This could be due to network congestion or a malicious **Delay Attack** (a form of **Availability** attack), where an attacker intercepts and holds messages before releasing them.
             </p>
             <p class="font-semibold text-red-600">Observation: Note the negative values in the distance column. A negative distance signifies a collision or vehicle overlap.</p>
         </div>
@@ -463,70 +482,63 @@ function loadScenario2() {
             </div>
         </div>
         
-        <!-- QUESTIONS -->
         <form onsubmit="event.preventDefault(); submitAnswers('scenario2');" class="card bg-white p-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Analysis Questions</h2>
             <div class="space-y-6">
-                <!-- Q1: Time of Max Danger (Collision) -->
                 <div>
-                    <p class="font-semibold text-lg mb-2">Q1: At what approximate time (T_S) does the first definitive collision (negative distance) occur?</p>
+                    <p class="font-semibold text-lg mb-2">Q1: A communication delay, whether natural or malicious, can be catastrophic. At what time (T_S) does the first collision (negative distance) occur?</p>
                     <ul class="space-y-1 ml-4">
                         <li><input type="radio" name="q1" value="A" id="s2q1a"> <label for="s2q1a">A) 12 seconds</label></li>
                         <li><input type="radio" name="q1" value="B" id="s2q1b"> <label for="s2q1b">B) 52 seconds</label></li>
                         <li><input type="radio" name="q1" value="C" id="s2q1c"> <label for="s2q1c">C) 60 seconds</label></li>
-                        <li><input type="radio" name="q1" value="D" id="s2q1d"> <label for="s2q1d">D) 250 seconds</label></li>
+                        <li><input type="radio" name="q1" value="D" id="s2q1d"> <label for="s2q1d">D) 8 seconds</label></li>
                     </ul>
                 </div>
 
-                <!-- Q2: Max Deviation Type -->
                 <div>
-                    <p class="font-semibold text-lg mb-2">Q2: What is the maximum *positive* deviation from the initial distance (5.13m) caused by the delay?</p>
+                    <p class="font-semibold text-lg mb-2">Q2: By delaying the V2V messages, the attacker is primarily violating which core cybersecurity principle of the CIA Triad?</p>
                     <ul class="space-y-1 ml-4">
-                        <li><input type="radio" name="q2" value="A" id="s2q2a"> <label for="s2q2a">A) ~6.01 meters</label></li>
-                        <li><input type="radio" name="q2" value="B" id="s2q2b"> <label for="s2q2b">B) ~16.56 meters</label></li>
-                        <li><input type="radio" name="q2" value="C" id="s2q2c"> <label for="s2q2c">C) ~21.87 meters</label></li>
-                        <li><input type="radio" name="q2" value="D" id="s2q2d"> <label for="s2q2d">D) ~1.03 meters</label></li>
+                        <li><input type="radio" name="q2" value="A" id="s2q2a"> <label for="s2q2a">A) Confidentiality (data is not kept secret)</label></li>
+                        <li><input type="radio" name="q2" value="B" id="s2q2b"> <label for="s2q2b">B) Integrity (data is altered)</label></li>
+                        <li><input type="radio" name="q2" value="C" id="s2q2c"> <label for="s2q2c">C) Availability (data is not available in a timely manner)</label></li>
+                        <li><input type="radio" name="q2" value="D" id="s2q2d"> <label for="s2q2d">D) Authentication (data source is forged)</label></li>
                     </ul>
                 </div>
 
-                <!-- Q3: Stability in the Absence of Delay -->
                 <div>
-                    <p class="font-semibold text-lg mb-2">Q3: Analyze the "Distance_between_vehicles_without_delay" column. Is the system string stable when no delay is present?</p>
+                    <p class="font-semibold text-lg mb-2">Q3: The 'without_delay' column acts as a 'control group'. What does this baseline data confirm?</p>
                     <ul class="space-y-1 ml-4">
-                        <li><input type="radio" name="q3" value="A" id="s2q3a"> <label for="s2q3a">A) No, the distance rapidly oscillates out of control.</label></li>
-                        <li><input type="radio" name="q3" value="B" id="s2q3b"> <label for="s2q3b">B) Yes, the distance quickly returns to the target value (5.13m) and remains stable.</label></li>
-                        <li><input type="radio" name="q3" value="C" id="s2q3c"> <label for="s2q3c">C) It is marginally stable, showing small, persistent oscillations.</label></li>
-                        <li><input type="radio" name="q3" value="D" id="s2q3d"> <label for="s2q3d">D) The distance increases linearly over time.</label></li>
+                        <li><input type="radio" name="q3" value="A" id="s2q3a"> <label for="s2q3a">A) The CACC controller is inherently unstable.</label></li>
+                        <li><input type="radio" name="q3" value="B" id="s2q3b"> <label for="s2q3b">B) The CACC controller is stable under normal (no-delay) conditions.</label></li>
+                        <li><input type="radio" name="q3" value="C" id="s2q3c"> <label for="s2q3c">C) The vehicles cannot exceed 10 mps.</label></li>
+                        <li><input type="radio" name="q3" value="D" id="s2q3d"> <label for="s2q3d">D) The target distance is 21.87m.</label></li>
                     </ul>
                 </div>
                 
-                <!-- Q4: Velocity Overshoot -->
                 <div>
-                    <p class="font-semibold text-lg mb-2">Q4: The follower's velocity "with delay" peaks significantly higher than "without delay" around T_S = 10. What is the approximate velocity overshoot in mps?</p>
+                    <p class="font-semibold text-lg mb-2">Q4: What is the maximum *positive* distance deviation (instability) from the 5.13m setpoint caused by the delay?</p>
                     <ul class="space-y-1 ml-4">
-                        <li><input type="radio" name="q4" value="A" id="s2q4a"> <label for="s2q4a">A) 7.4 mps (17.3 - 9.9)</label></li>
-                        <li><input type="radio" name="q4" value="B" id="s2q4b"> <label for="s2q4b">B) 1.5 mps (11.4 - 9.9)</label></li>
-                        <li><input type="radio" name="q4" value="C" id="s2q4c"> <label for="s2q4c">C) 0.5 mps (10.1 - 9.7)</label></li>
-                        <li><input type="radio" name="q4" value="D" id="s2q4d"> <label for="s2q4d">D) 10.0 mps (16.4 - 6.4)</label></li>
+                        <li><input type="radio" name="q4" value="A" id="s2q4a"> <label for="s2q4a">A) ~16.56 meters (at T_S=7)</label></li>
+                        <li><input type="radio" name="q4" value="B" id="s2q4b"> <label for="s2q4b">B) ~1.03 meters (at T_S=150)</label></li>
+                        <li><input type="radio" name="q4" value="C" id="s2q4c"> <label for="s2q4c">C) ~21.87 meters (at T_S=8)</label></li>
+                        <li><input type="radio" name="q4" value="D" id="s2q4d"> <label for="s2q4d">D) ~8.18 meters (at T_S=6)</label></li>
                     </ul>
                 </div>
 
-                <!-- Q5: Root Cause of Instability -->
                 <div>
-                    <p class="font-semibold text-lg mb-2">Q5: In this scenario, what is the fundamental cause of the string instability and collision?</p>
+                    <p class="font-semibold text-lg mb-2">Q5: What is the fundamental control-system reason for the collision?</p>
                     <ul class="space-y-1 ml-4">
-                        <li><input type="radio" name="q5" value="A" id="s2q5a"> <label for="s2q5a">A) The follower is receiving velocity data that is too *high*.</label></li>
-                        <li><input type="radio" name="q5" value="B" id="s2q5b"> <label for="s2q5b">B) The follower is receiving position data that is too *low*.</label></li>
-                        <li><input type="radio" name="q5" value="C" id="s2q5c"> <label for="s2q5c">C) The follower is reacting to *outdated* leader data, causing over-compensation.</label></li>
-                        <li><input type="radio" name="q5" value="D" id="s2q5d"> <label for="s2q5d">D) The leader vehicle suddenly applied the brakes.</label></li>
+                        <li><input type="radio" name="q5" value="A" id="s2q5a"> <label for="s2q5a">A) The follower receives false *high* velocity data.</label></li>
+                        <li><input type="radio" name="q5" value="B" id="s2q5b"> <label for="s2q5b">B) The follower receives false *low* velocity data.</label></li>
+                        <li><input type="radio" name="q5" value="C" id="s2q5c"> <label for="s2q5c">C) The follower's controller reacts to *stale* (outdated) data, causing over-compensation.</label></li>
+                        <li><input type="radio" name="q5" value="D" id="s2q5d"> <label for="s2q5d">D) The leader vehicle malfunctioned and braked suddenly.</label></li>
                     </ul>
                 </div>
             </div>
             
-            <!-- Response Question -->
             <div class="mt-6">
-                <p class="font-semibold text-lg mb-2">Q6: Propose a design modification (not just a network fix) to the CACC controller logic itself that could potentially counteract the negative effects of communication delay. (Free Response)</p>
-                <textarea id="s2-proposal" class="w-full border-2 border-gray-300 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500" rows="3" placeholder="Explain your proposal (e.g., predictive model, filtering, sensor fusion)."></textarea>
+                <p class="font-semibold text-lg mb-2">Q6: How could a **timestamp-based detection** mechanism help *detect* this delay attack? (Free Response)</p>
+                <textarea id="s2-proposal" class="w-full border-2 border-gray-300 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500" rows="3" placeholder="Explain how checking message timestamps against a 'freshness' threshold would work."></textarea>
             </div>
             
             <button type="submit" class="mt-6 w-full md:w-auto px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition duration-150">
@@ -572,7 +584,7 @@ function handleHashChange() {
 function submitAnswers(scenario) {
     let score = 0;
     let feedback = '<h3>Results:</h3>';
-    let totalScore = 0; // Total questions graded
+    let totalScore = 0; 
 
     const resultsElement = document.getElementById('results');
     if (!resultsElement) return;
@@ -581,33 +593,31 @@ function submitAnswers(scenario) {
     resultsElement.classList.add('hidden');
     resultsElement.innerHTML = '';
 
-
     if (scenario === 'limp-mode') {
-        totalScore = 2; // Q1 and Q2 are graded
-        const q1 = document.querySelector('input[name="q1"]:checked')?.value;
-        const q2 = document.querySelector('input[name="q2"]:checked')?.value;
-        const q3Text = document.getElementById('limp-proposal')?.value;
+        totalScore = 5; // Updated to 5 questions
+        const answers = {
+            q1: document.querySelector('input[name="q1"]:checked')?.value,
+            q2: document.querySelector('input[name="q2"]:checked')?.value,
+            q3: document.querySelector('input[name="q3"]:checked')?.value,
+            q4: document.querySelector('input[name="q4"]:checked')?.value,
+            q5: document.querySelector('input[name="q5"]:checked')?.value,
+        };
+        // Correct answers for the new questions
+        const correctAnswers = { q1: 'B', q2: 'B', q3: 'C', q4: 'B', q5: 'A' };
 
-        // Q1 Grading: Spoofed ID
-        if (q1 === 'B') {
-            score++;
-            feedback += '<p class="text-green-700">Q1 (CAN ID): Correct. The spoofed message is targeting the **Battery State of Charge (0x101)**.</p>';
-        } else {
-            feedback += '<p class="text-red-700">Q1 (CAN ID): Incorrect. The spoofed message is targeting the **Battery State of Charge (0x101)**.</p>';
+        // Grade MCQs
+        for (let i = 1; i <= totalScore; i++) {
+            const qKey = `q${i}`;
+            const isCorrect = answers[qKey] === correctAnswers[qKey];
+            if (isCorrect) score++;
+            feedback += `<p class="${isCorrect ? 'text-green-700' : 'text-red-700'}">Q${i}: ${isCorrect ? 'Correct' : `Incorrect (Correct Answer: ${correctAnswers[qKey]})`}.</p>`;
         }
 
-        // Q2 Grading: Payload Value
-        if (q2 === 'B') {
-            score++;
-            feedback += '<p class="text-green-700">Q2 (Payload): Correct. **15% is 0x0F**, which forces the reported battery level below the 30% limp mode threshold.</p>';
-        } else {
-            feedback += '<p class="text-red-700">Q2 (Payload): Incorrect. The correct hex payload is **0x0F** (15 Decimal).</p>';
-        }
-
-        // Q3 Feedback (Free Response - Not strictly graded, but checked for content)
-        feedback += '<p class="mt-4 font-bold text-gray-800">Q3 (Mitigation Proposal) Feedback:</p>';
-        if (q3Text && q3Text.length > 20) {
-            feedback += '<p class="text-blue-700">Your proposal is noted. Common strategies include **Message Authentication Codes (MACs)** to verify message origin, or **Network Segmentation** to isolate critical components.</p>';
+        // Q6 Feedback (Free Response)
+        const q6Text = document.getElementById('limp-proposal')?.value;
+        feedback += '<p class="mt-4 font-bold text-gray-800">Q6 (Mitigation Proposal) Feedback:</p>';
+        if (q6Text && q6Text.length > 20) {
+            feedback += '<p class="text-blue-700">Your proposal is noted. Common strategies include **Message Authentication Codes (MACs)**, **Network Segmentation** (e.g., using a secure gateway), or an **Intrusion Detection System (IDS)** to spot anomalies.</p>';
         } else {
             feedback += '<p class="text-yellow-700">Please provide a more detailed mitigation proposal in the text box.</p>';
         }
@@ -621,7 +631,8 @@ function submitAnswers(scenario) {
             q4: document.querySelector('input[name="q4"]:checked')?.value,
             q5: document.querySelector('input[name="q5"]:checked')?.value,
         };
-        const correctAnswers = { q1: 'B', q2: 'B', q3: 'C', q4: 'C', q5: 'B' };
+        // Correct answers for the new questions
+        const correctAnswers = { q1: 'B', q2: 'B', q3: 'B', q4: 'A', q5: 'C' };
 
         // Grade MCQs
         for (let i = 1; i <= totalScore; i++) {
@@ -633,9 +644,9 @@ function submitAnswers(scenario) {
 
         // Q6 Feedback (Free Response)
         const q6Text = document.getElementById('s1-proposal')?.value;
-        feedback += '<p class="mt-4 font-bold text-gray-800">Q6 (Free Response) Feedback:</p>';
+        feedback += '<p class="mt-4 font-bold text-gray-800">Q6 (Plausibility Check) Feedback:</p>';
         if (q6Text && q6Text.length > 20) {
-            feedback += '<p class="text-blue-700">Your explanation is noted. The FDI attack forces the follower to believe the leader is **accelerating rapidly (or is much faster)**. The follower accelerates to maintain the gap, but since the leader is not actually accelerating, the gap rapidly collapses, leading to the near-collision.</p>';
+            feedback += '<p class="text-blue-700">Your explanation is noted. A good plausibility check would cross-reference the *reported* leader velocity (from V2V) with data from the follower\'s *own radar sensor*. If the reported velocity is 10 mps but the radar sees a closing gap, the V2V data is clearly implausible.</p>';
         } else {
             feedback += '<p class="text-yellow-700">Please provide an explanation for Q6.</p>';
         }
@@ -649,7 +660,8 @@ function submitAnswers(scenario) {
             q4: document.querySelector('input[name="q4"]:checked')?.value,
             q5: document.querySelector('input[name="q5"]:checked')?.value,
         };
-        const correctAnswers = { q1: 'B', q2: 'C', q3: 'B', q4: 'A', q5: 'C' };
+        // Correct answers for the new questions
+        const correctAnswers = { q1: 'B', q2: 'C', q3: 'B', q4: 'C', q5: 'C' };
 
         // Grade MCQs
         for (let i = 1; i <= totalScore; i++) {
@@ -661,9 +673,10 @@ function submitAnswers(scenario) {
 
         // Q6 Feedback (Free Response)
         const q6Text = document.getElementById('s2-proposal')?.value;
-        feedback += '<p class="mt-4 font-bold text-gray-800">Q6 (Free Response) Feedback:</p>';
+        feedback += '<p class="mt-4 font-bold text-gray-800">Q6 (Timestamp Detection) Feedback:</p>';
         if (q6Text && q6Text.length > 20) {
-            feedback += '<p class="text-blue-700">Your proposal is noted. A common solution is to implement **feedforward prediction (e.g., using a Kalman Filter)** to estimate the leader\'s state *at the current time* based on the delayed information and system dynamics, thereby reducing controller over-reactions.</p>';
+            // *** THIS IS THE FIXED LINE ***
+            feedback += "<p class=\"text-blue-700\">Your proposal is noted. A controller could be designed to check the timestamp of every received V2V message. If the timestamp is older than a set threshold (e.g., > 50ms), the message would be discarded as 'stale', preventing the controller from acting on outdated, dangerous information.</p>";
         } else {
             feedback += '<p class="text-yellow-700">Please provide a design modification proposal for Q6.</p>';
         }
