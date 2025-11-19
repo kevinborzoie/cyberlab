@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scenario 2: Delay Attack Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #1e293b; color: white; overflow: hidden; }
+        canvas { background-color: #334155; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .control-panel { background-color: #0f172a; padding: 20px; border-radius: 12px; width: 300px; }
+        
+        /* Custom Range Slider Styling */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #6366f1; cursor: pointer; margin-top: -8px; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #475569; border-radius: 2px; }
+    </style>
+</head>
+<body class="h-screen flex items-center justify-center gap-8 p-4">
+
+    <!-- Game Canvas -->
+    <div class="relative">
+        <canvas id="gameCanvas" width="800" height="400"></canvas>
+        <div id="gameOverOverlay" class="absolute inset-0 bg-black/80 flex items-center justify-center hidden rounded-lg">
+            <div class="text-center">
+                <h2 class="text-5xl font-bold text-red-500 mb-4">COLLISION!</h2>
+                <p class="text-xl text-gray-300 mb-6">The follower reacted to old data.</p>
+                <button onclick="resetGame()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-bold transition hover:scale-105">Restart Simulation</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls Side Panel -->
+    <div class="control-panel flex flex-col gap-6 h-[400px] justify-between">
+        <div>
+            <h1 class="text-xl font-bold text-indigo-400 mb-1">Delay Attack Sim</h1>
+            <p class="text-xs text-gray-400 mb-6">Adjust the network latency to see how it affects the automated follower.</p>
+            
+            <div class="mb-2 flex justify-between text-sm font-semibold">
+                <label>Network Delay</label>
+                <span id="delayValue" class="text-indigo-400">0 ms</span>
+            </div>
+            <input type="range" id="delaySlider" min="0" max="60" value="0" step="1" class="mb-1">
+            <p class="text-xs text-gray-500">High delay causes the follower to see the "Ghost" position instead of reality.</p>
+        </div>
+
+        <div class="space-y-3 text-sm border-t border-gray-700 pt-4">
+            <div class="flex justify-between">
+                <span class="text-gray-400">Status:</span>
+                <span id="statusText" class="text-green-400 font-mono">RUNNING</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-400">Actual Distance:</span>
+                <span id="distText" class="font-mono">50.0 m</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-400">Follower Speed:</span>
+                <span id="speedText" class="font-mono">0 km/h</span>
+            </div>
+        </div>
+
+        <div class="text-xs text-gray-500 mt-auto">
+            <div class="flex items-center gap-2 mb-1"><div class="w-3 h-3 bg-blue-500 rounded"></div> Leader (Real)</div>
+            <div class="flex items-center gap-2 mb-1"><div class="w-3 h-3 bg-blue-500/30 rounded border border-blue-400 border-dashed"></div> Leader (Delayed Data)</div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 bg-red-500 rounded"></div> Follower</div>
+        </div>
+    </div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// Game State
+let isRunning = true;
+let frameCount = 0;
+let delayFrames = 0;
+
+// Entities
+const leader = {
+    x: 600, // Starts on the right
+    y: 180,
+    width: 50,
+    height: 30,
+    speed: 0,
+    color: '#3b82f6',
+    history: [] // Stores past positions for the delay logic
+};
+
+const follower = {
+    x: 100, // Starts on the left
+    y: 180,
+    width: 50,
+    height: 30,
+    speed: 0,
+    color: '#ef4444',
+    targetDistance: 150 // The CACC setpoint
+};
+
+// Simulation Parameters
+const MAX_SPEED = 8;
+const ACCEL = 0.1;
+const BRAKE = 0.2;
+
+// UI Elements
+const slider = document.getElementById('delaySlider');
+const delayValDisplay = document.getElementById('delayValue');
+const statusDisplay = document.getElementById('statusText');
+const distDisplay = document.getElementById('distText');
+const speedDisplay = document.getElementById('speedText');
+const overlay = document.getElementById('gameOverOverlay');
+
+// --- LOGIC ---
+
+function update() {
+    if (!isRunning) return;
+
+    frameCount++;
+
+    // 1. UPDATE LEADER (Simple AI: Accelerate then Brake)
+    // Cycle: 0-200 accelerate, 200-400 coast, 400-500 HARD BRAKE, 500+ recover
+    const cycle = frameCount % 700;
+    
+    if (cycle < 200) {
+        leader.speed = Math.min(leader.speed + 0.05, MAX_SPEED);
+    } else if (cycle < 400) {
+        // Coast
+        leader.speed *= 0.99;
+    } else if (cycle < 550) {
+        // Hard Brake
+        leader.speed = Math.max(leader.speed - 0.15, 2);
+    } else {
+        // Recover
+        leader.speed = Math.min(leader.speed + 0.05, MAX_SPEED);
+    }
+
+    // Store Leader History for the Attack
+    leader.history.push({ x: leader.x, speed: leader.speed });
+    if (leader.history.length > 200) leader.history.shift(); // Keep memory manageable
+
+    // 2. DETERMINE "PERCEIVED" LEADER STATE (The Attack)
+    delayFrames = parseInt(slider.value);
+    delayValDisplay.innerText = (delayFrames * 16) + " ms"; // approx 16ms per frame at 60fps
+
+    let perceivedLeader = { x: leader.x, speed: leader.speed };
+    
+    if (delayFrames > 0 && leader.history.length > delayFrames) {
+        const index = leader.history.length - 1 - delayFrames;
+        perceivedLeader = leader.history[index];
+    }
+
+    // 3. UPDATE FOLLOWER (CACC Controller Logic)
+    const perceivedDistance = perceivedLeader.x - follower.x;
+    const error = perceivedDistance - follower.targetDistance;
+
+    // Simple P-Controller for throttle
+    if (error > 0) {
+        // Too far, speed up
+        follower.speed += 0.05;
+    } else {
+        // Too close (or thinks it is), slow down
+        follower.speed -= 0.08;
+    }
+
+    // Dampening / Physics limits
+    follower.speed *= 0.99; // Friction
+    follower.speed = Math.max(follower.speed, 0);
+    
+    // 4. MOVE CARS RELATIVE TO EACH OTHER (Simulate Camera Movement)
+    const relativeSpeed = follower.speed - leader.speed;
+    follower.x += relativeSpeed; 
+
+    // 5. CHECK COLLISION
+    if (follower.x + follower.width > leader.x) {
+        gameOver();
+    }
+
+    // 6. UI UPDATES
+    const realDist = leader.x - (follower.x + follower.width);
+    distDisplay.innerText = realDist.toFixed(1) + " m";
+    speedDisplay.innerText = (follower.speed * 10).toFixed(0) + " km/h";
+    
+    // Safety Check for Visual Glitches (reset if they drift too far apart or off screen)
+    if (realDist > 600 || realDist < -50) resetGame();
+}
+
+function draw() {
+    // Clear Screen
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Road
+    ctx.fillStyle = '#475569';
+    ctx.fillRect(0, 100, canvas.width, 200);
+
+    // Moving Road Lines (Parallax effect based on Leader Speed)
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 4;
+    ctx.setLineDash([40, 40]);
+    const lineOffset = (frameCount * leader.speed) % 80; 
+    
+    ctx.beginPath();
+    ctx.moveTo(0, 200);
+    ctx.lineTo(canvas.width, 200);
+    ctx.lineDashOffset = -lineOffset;
+    ctx.stroke();
+    ctx.setLineDash([]); // Reset
+
+    // Draw GHOST Leader (The Delayed Data) - Only if delay exists
+    if (delayFrames > 5 && leader.history.length > delayFrames) {
+        // Calculate Ghost Position visually relative to the follower
+        // This is a visual approximation to show the user what the follower "sees"
+        const ghostX = follower.x + follower.targetDistance; 
+        // We draw the ghost closer to the follower if delay is high to imply the follower thinks the leader is closer/further?
+        // Actually, simplest visual: Draw the leader where it WAS 'delayFrames' ago relative to the current world frame.
+        // Since the world moves, this is hard. Let's just draw a "Phantom" box representing the Delayed Data
+        
+        // Actually, simpler: Draw the Ghost Leader based on the PERCEIVED DISTANCE.
+        // If follower thinks distance is 150, draw ghost at follower.x + 150.
+        const index = leader.history.length - 1 - delayFrames;
+        // We approximate the ghost position for visualization
+        const ghostVisualX = leader.x - (delayFrames * (leader.speed - follower.speed)); 
+        
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.3)'; // Faded Blue
+        ctx.strokeStyle = 'rgba(59, 130, 246, 0.6)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.strokeRect(ghostVisualX, leader.y, leader.width, leader.height);
+        ctx.fillRect(ghostVisualX, leader.y, leader.width, leader.height);
+        ctx.setLineDash([]);
+        
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.8)';
+        ctx.font = "10px sans-serif";
+        ctx.fillText("Delayed Data", ghostVisualX, leader.y - 5);
+    }
+
+    // Draw Leader (Blue)
+    ctx.fillStyle = leader.color;
+    drawCar(leader.x, leader.y, leader.width, leader.height, "Leader");
+
+    // Draw Follower (Red)
+    ctx.fillStyle = follower.color;
+    drawCar(follower.x, follower.y, follower.width, follower.height, "Follower");
+    
+    // Draw Connection Line (V2V Link)
+    if (isRunning) {
+        ctx.beginPath();
+        ctx.moveTo(follower.x + follower.width, follower.y + 15);
+        ctx.lineTo(leader.x, leader.y + 15);
+        
+        if (delayFrames < 10) ctx.strokeStyle = '#4ade80'; // Green
+        else if (delayFrames < 30) ctx.strokeStyle = '#facc15'; // Yellow
+        else ctx.strokeStyle = '#f87171'; // Red
+        
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Label
+        ctx.fillStyle = 'white';
+        ctx.font = "12px monospace";
+        ctx.fillText(delayFrames > 0 ? `Latency: ${(delayFrames*16)}ms` : "V2V Link: OK", (follower.x + leader.x)/2 - 30, leader.y - 10);
+    }
+}
+
+function drawCar(x, y, w, h, label) {
+    // Body
+    ctx.fillRect(x, y, w, h);
+    // Wheels
+    ctx.fillStyle = 'black';
+    ctx.fillRect(x + 5, y - 5, 10, 5);
+    ctx.fillRect(x + w - 15, y - 5, 10, 5);
+    ctx.fillRect(x + 5, y + h, 10, 5);
+    ctx.fillRect(x + w - 15, y + h, 10, 5);
+    
+    // Label
+    ctx.fillStyle = 'white';
+    ctx.font = "10px sans-serif";
+    ctx.fillText(label, x, y - 5);
+}
+
+function gameOver() {
+    isRunning = false;
+    overlay.classList.remove('hidden');
+    statusDisplay.innerText = "CRASHED";
+    statusDisplay.classList.replace('text-green-400', 'text-red-500');
+}
+
+function resetGame() {
+    // Reset positions
+    leader.x = 600;
+    leader.speed = 0;
+    leader.history = [];
+    
+    follower.x = 100;
+    follower.speed = 0;
+    
+    // Reset State
+    frameCount = 0;
+    isRunning = true;
+    overlay.classList.add('hidden');
+    statusDisplay.innerText = "RUNNING";
+    statusDisplay.classList.replace('text-red-500', 'text-green-400');
+    
+    // Reset Slider (Optional, usually better to keep it to let them try again with same settings)
+    // slider.value = 0;
+}
+
+// Main Game Loop
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+// Start
+loop();
+
+</script>
+</body>
+</html>
